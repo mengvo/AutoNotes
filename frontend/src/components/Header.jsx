@@ -11,7 +11,7 @@ function Header() {
             justify="flex-start" 
             width="100vw"
             paddingTop="3%"
-            px={4}>
+            px={4}>            
             <Heading size="5xl" letterSpacing="tight">
                 <Highlight query={query} styles={{color: "#3B82F6"}}>
                     Effortless Study Notes — Powered by AI

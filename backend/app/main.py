@@ -1,10 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
 origins = [
-    "http://localhost:5173/"
+    'http://localhost:5173',
+    'localhost:5173'
 ]
 
 app.add_middleware(
@@ -17,4 +18,8 @@ app.add_middleware(
 
 @app.get('/')
 def root():
-    return {"message": "Hello World!"}
+    return {'message': 'Hello World!'}
+
+@app.post('/generate_notes')
+def generate(files: list[UploadFile]):
+    return {'filenames': [file.filename for file in files]}
