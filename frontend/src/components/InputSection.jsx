@@ -1,25 +1,33 @@
 import { Flex, Box, Button, FileUpload, Icon, VStack } from '@chakra-ui/react';
-import { HiDocumentAdd, HiOutlinePencilAlt, HiSparkles, HiTrash } from 'react-icons/hi';
+import { HiDocumentAdd, HiOutlinePencilAlt, HiSparkles } from 'react-icons/hi';
 import { LuUpload } from 'react-icons/lu';
 import { useState } from 'react';
 import TopicInput from './TopicInput';
+import InputListDisplay from './InputListDisplay';
 
 function InputSection() {
     const [files, setFiles] = useState([]);
     const [topic, setTopic] = useState('');
     const [showTopicInput, setShowTopicInput] = useState(false);
 
+    // sends post request to api
     const handleSubmit = async () => {
-        if(files.length === 0) {
-            console.error('No files uploaded')
+        if(files.length === 0 || !topic.trim()) {
+            console.error('Nothing uploaded');
             return;
         }
 
         const formData = new FormData();
 
-        files.forEach((file) => {
-            formData.append('files', file, file.name)
-        });
+        if(files.length > 0) {
+            files.forEach((file) => {
+                formData.append('files', file, file.name);
+            });
+        }
+        
+        if(topic.trim() !== '') {
+            formData.append('topic', topic);
+        }
 
         const res = await fetch('http://127.0.0.1:8000/generate_notes', {
             method: 'POST',
@@ -32,10 +40,13 @@ function InputSection() {
             const data = await res.json();
             console.log('Response from backend:', data);
         }
-        console.log('Topic', topic)
     };
 
     const handlePrompt = () => { setShowTopicInput(true) };
+
+    const handleDeleteFile = (fileToDelete) => {
+        setFiles((prev) => prev.filter((file) => file !== fileToDelete));
+    };
 
     return (
         <Box position="relative" width="100%" height="100%">
@@ -104,23 +115,13 @@ function InputSection() {
                                 </FileUpload.DropzoneContent>
                             </FileUpload.Dropzone>
 
-                            <FileUpload.ItemGroup>
-                                <FileUpload.Context>
-                                    {({ acceptedFiles }) =>
-                                        acceptedFiles.map((file) => (
-                                            <FileUpload.Item key={file.name} file={file}>
-                                            <FileUpload.ItemPreview />
-                                            <FileUpload.ItemName />
-                                            <FileUpload.ItemSizeText />
-                                            <FileUpload.ItemDeleteTrigger boxSize="8">
-                                                <Icon as={HiTrash} boxSize={6} />
-                                            </FileUpload.ItemDeleteTrigger>
-                                            </FileUpload.Item>
-                                        ))
-                                    }
-                                </FileUpload.Context>
-                            </FileUpload.ItemGroup>
-
+                            {(files.length > 0 || topic !== '') && (
+                                <InputListDisplay
+                                    files={files}
+                                    topic={topic}
+                                    handleDeleteFile={handleDeleteFile}
+                                    handleDeleteTopic={setTopic}/>
+                            )}
                         </FileUpload.Root>
                     </VStack>
                 </Box>

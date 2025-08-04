@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -21,5 +21,5 @@ def root():
     return {'message': 'Hello World!'}
 
 @app.post('/generate_notes')
-def generate(files: list[UploadFile]):
-    return {'filenames': [file.filename for file in files]}
+def generate(files: list[UploadFile] = File(None), topic: str = Form(None)):
+    return {'filenames': [file.filename for file in files], 'topic': topic}

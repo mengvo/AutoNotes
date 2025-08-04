@@ -5,8 +5,4 @@ use `uvicorn main:app --reload` to run backend.
 <br>
 use `npm run dev` to run frontend.
 <br>
-TODO: create your own FileList component to display the list, so we can add txt files and customize the file list. Make it similar to 
-TopicInput, so only display it if there's a file to display. You can add a state to the FileList called like 'files' which will be an
-array of files. Also need to figure out how to add .txt to the formData in handleSubmit in InputSection; will need to update backend
-as well. '/generate_notes' should now take a file list and a list of strings (.txt files) OR we can make one big file array. TopicInput
-is pretty much done.
+TODO: frontend pretty much done. I think now the next big step will be to implement the ai note generation using the data from the post request. Should start by researching how huggingface works, and how I want to implement it. Watch videos.

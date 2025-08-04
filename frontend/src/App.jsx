@@ -1,6 +1,6 @@
-import { Flex } from '@chakra-ui/react'
-import Header from './components/Header'
-import InputSection from './components/InputSection'
+import { Flex } from '@chakra-ui/react';
+import Header from './components/Header';
+import InputSection from './components/InputSection';
 
 function App() {
 

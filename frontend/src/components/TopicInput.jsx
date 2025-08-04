@@ -1,4 +1,4 @@
-import { Box, Textarea, Heading, Flex, Button } from '@chakra-ui/react'
+import { Box, Textarea, Heading, Flex, Button } from '@chakra-ui/react';
 import { HiOutlineX } from 'react-icons/hi';
 import { useState } from 'react';
 
