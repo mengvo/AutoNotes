@@ -1,18 +1,22 @@
 import { Flex, Box, Button, FileUpload, Icon, VStack } from '@chakra-ui/react';
 import { HiDocumentAdd, HiOutlinePencilAlt, HiSparkles } from 'react-icons/hi';
 import { LuUpload } from 'react-icons/lu';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import TopicInput from './TopicInput';
 import InputListDisplay from './InputListDisplay';
 
+//TODO when a file is added and removed, and a new file is added, old one reappears, when 4 files add, weird behavior 
+                                                                                        // (kinda works as expected)
+
 function InputSection() {
     const [files, setFiles] = useState([]);
+    const lastProcessedIndex = useRef(-1);
     const [topic, setTopic] = useState('');
     const [showTopicInput, setShowTopicInput] = useState(false);
 
     // sends post request to api
     const handleSubmit = async () => {
-        if(files.length === 0 || !topic.trim()) {
+        if(files.length === 0 && !topic.trim()) {
             console.error('Nothing uploaded');
             return;
         }
@@ -29,20 +33,33 @@ function InputSection() {
             formData.append('topic', topic);
         }
 
+        console.time('POST request');
         const res = await fetch('http://127.0.0.1:8000/generate_notes', {
             method: 'POST',
             body: formData
         });
+        console.timeEnd('POST request');
 
         if (!res.ok) {
             console.error('Failed to send file');
         } else {
+            console.time('Parsing response');
             const data = await res.json();
+            console.timeEnd('Parsing response');
             console.log('Response from backend:', data);
         }
     };
 
     const handlePrompt = () => { setShowTopicInput(true) };
+
+    const handleFileAccept = (details) => {
+        console.log(details.files);
+        const newFiles = details.files.slice(lastProcessedIndex.current + 1);
+        if (newFiles.length > 0) {
+            setFiles(prev => [...prev, ...newFiles]);
+            lastProcessedIndex.current = details.files.length - 1;
+        }
+    };
 
     const handleDeleteFile = (fileToDelete) => {
         setFiles((prev) => prev.filter((file) => file !== fileToDelete));
@@ -73,11 +90,11 @@ function InputSection() {
                     padding="4"
                     color="white"
                     borderRadius="lg">
-                    <VStack> {/* Depending on AI, may add more file types */}
+                    <VStack>
                         <FileUpload.Root 
-                            accept={['application/pdf', 'text/*']} 
-                            maxFiles={5}
-                            onChange={(e) => { setFiles(Array.from(e.target?.files) || []) }}> 
+                            accept={['application/pdf']} 
+                            maxFiles={25}
+                            onFileAccept={handleFileAccept}> 
                             <FileUpload.HiddenInput />
 
                             <Flex gap={4} justify="center">
@@ -111,7 +128,7 @@ function InputSection() {
                                 </Icon>
                                 <FileUpload.DropzoneContent>
                                     <Box color="white">Drag and drop files here</Box>
-                                    <Box color="fg.muted">supported formats: .pdf</Box> {/* Depending on AI, may add more file types */}
+                                    <Box color="fg.muted">supported formats: .pdf</Box>
                                 </FileUpload.DropzoneContent>
                             </FileUpload.Dropzone>
 
