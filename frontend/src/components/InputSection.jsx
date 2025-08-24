@@ -4,15 +4,14 @@ import { LuUpload } from 'react-icons/lu';
 import { useState, useRef } from 'react';
 import TopicInput from './TopicInput';
 import InputListDisplay from './InputListDisplay';
-
-//TODO when a file is added and removed, and a new file is added, old one reappears, when 4 files add, weird behavior 
-                                                                                        // (kinda works as expected)
+import NotesDisplay from './NotesDisplay';
 
 function InputSection() {
     const [files, setFiles] = useState([]);
     const lastProcessedIndex = useRef(-1);
     const [topic, setTopic] = useState('');
     const [showTopicInput, setShowTopicInput] = useState(false);
+    const [notes, setNotes] = useState('');
 
     // sends post request to api
     const handleSubmit = async () => {
@@ -45,6 +44,7 @@ function InputSection() {
         } else {
             console.time('Parsing response');
             const data = await res.json();
+            setNotes(data.generated_notes);
             console.timeEnd('Parsing response');
             console.log('Response from backend:', data);
         }
@@ -81,6 +81,22 @@ function InputSection() {
                     <TopicInput 
                         setShowTopicInput={setShowTopicInput}
                         setTopic={setTopic}/>
+                </>
+            )}
+            {notes !== '' && (
+                <>
+                    <Box 
+                        position="fixed"
+                        top="0"
+                        left="0"
+                        width="100vw"
+                        height="100vh"
+                        backdropFilter="blur(3px)"
+                        background="rgba(0, 0, 0, 0.3)"
+                        zIndex="999"/>
+                    <NotesDisplay
+                        notes={notes}
+                        setNotes={setNotes}/>
                 </>
             )}
             <Flex gap={5} direction="column" justify="flex-end" alignItems="center">
