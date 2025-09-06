@@ -33,7 +33,7 @@ function InputSection() {
         }
 
         console.time('POST request');
-        const res = await fetch('http://127.0.0.1:8000/generate_notes', {
+        const res = await fetch('https://autonotes-saep.onrender.com/generate_notes', {
             method: 'POST',
             body: formData
         });
