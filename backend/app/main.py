@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import pdfplumber
 import re
 import pytesseract
-from transformers import pipeline
+import os, requests
 
 app = FastAPI()
 
@@ -22,7 +22,9 @@ app.add_middleware(
 
 OCR_BASELINE = 50
 
-summarizer = pipeline('summarization', model='facebook/bart-large-cnn')
+HUGGINGFACE_API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
+HUGGINGFACE_API_KEY = os.getenv("HF_API_KEY")
+headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
 
 def chunk_text(text, max_words=800):
     words = text.split()
@@ -31,9 +33,14 @@ def chunk_text(text, max_words=800):
         chunks.append(" ".join(words[i:i+max_words]))
     return chunks
 
-@app.get('/')
-def root():
-    return {'message': 'Hello World!'}
+def summarize_text(text):
+    response = requests.post(
+        HUGGINGFACE_API_URL,
+        headers=headers,
+        json={"inputs": text, "parameters": {"max_length": 170, "min_length": 30}}
+    )
+    result = response.json()
+    return result[0]["summary_text"]
 
 @app.post('/generate_notes')
 def generate(files: list[UploadFile] = File(None), topic: str = Form(None)):
@@ -45,7 +52,6 @@ def generate(files: list[UploadFile] = File(None), topic: str = Form(None)):
                 for page in pdf.pages:
                     text = page.extract_text()
                     if text and len(text.strip()) > OCR_BASELINE:
-                        # regex to ensure only letters, numbers, spaces, punctuation
                         parsed_text += re.sub(r'[^\w\s.,;:!?()\-]', '', text) + '\n'
                     else:
                         image = page.to_image(resolution=400).original
@@ -60,12 +66,12 @@ def generate(files: list[UploadFile] = File(None), topic: str = Form(None)):
 
     partial_summaries = []
     for chunk in chunks:
-        result = summarizer(chunk, max_length=170, min_length=30, do_sample=False)
-        partial_summaries.append(result[0]['summary_text'])
+        summary = summarize_text(chunk)
+        partial_summaries.append(summary)
 
     if len(partial_summaries) > 1:
         final_input = " ".join(partial_summaries)
-        final_summary = summarizer(final_input, max_length=250, min_length=60, do_sample=False)[0]['summary_text']
+        final_summary = summarize_text(final_input)
     else:
         final_summary = partial_summaries[0] if partial_summaries else ""
 
